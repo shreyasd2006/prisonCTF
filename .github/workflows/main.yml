@@ -1,0 +1,45 @@
+name: CTF Problem Validator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-solution:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # We need to fetch the full history to check the last commit
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set up Java (JDK 17)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run validation script
+        run: |
+          chmod +x ./validate.sh
+          ./validate.sh
+
+      - name: Commit and push progress
+        run: |
+          git config --global user.name 'Validation Bot'
+          git config --global user.email 'bot@github.com'
+          git add .progress
+          
+          if git diff --staged --quiet; then
+            echo "No progress change to commit."
+          else
+            git commit -m "Progress: Unlocked next problem [skip ci]"
+            git push
+          fi
