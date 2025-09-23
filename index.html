@@ -1,35 +1,291 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>pr1$0nCTF</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel='stylesheet' type='text/css' media='screen' href='style.css'>
-    <meta name="theme-color" content="#1F1A38">
-    <meta name="author" content="Nishith P">
-    <meta name="description" content="Get ready to test your cybersecurity prowess and problem-solving skills in our exciting Capture the Flag (CTF) challenge! Participants will engage in thrilling competitions, prompting injection questions to retrieve flags and showcase their expertise. Whether you're a seasoned cybersecurity expert or a budding enthusiast, join us for an adrenaline-fueled journey into the world of digital defense. Are you up for the challenge?">
-    <meta name="keywords" content="prompt injection, LLMs, microsoft ignite students club, amrita, kalanjali 2024, kalanjali, prisonCTF, ctf, cybersecurity, amritadhara, amrita vishwa vidyapeetham bangalore">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">  
-    <link rel="preload" href="/fonts/octin\ spraypaint\ a\ rg.otf" as="font" type="font/otf" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Pacifico&family=Roboto:wght@500&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrisonCTF - Coding Competition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .CodeMirror { border-radius: 0.5rem; height: calc(100vh - 220px); font-size: 14px; }
+    </style>
 </head>
-<body>
-    <main class="glass">
-        <header>
-            <h1>Welcome - Say Hi</h1>
-        </header>
-        <iframe id="chat" src="https://copilotstudio.microsoft.com/environments/Default-ebbbcd62-c0a9-46ff-a92c-5f2300087164/bots/crbcf_pr10NCtfBot/webchat?__version__=2" frameborder="0" style="width: 100%; height: 60vh;"></iframe>
-    </br>
-        <footer>
-            <div id="footer">
-                <a href="https://ignitestudents.club">&copy; Microsoft Ignite Students Club</a>
+<body class="bg-gray-900 text-white">
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 id="auth-title" class="text-2xl font-bold mb-6 text-center text-cyan-400">Login</h2>
+            <div id="auth-error" class="text-red-400 mb-4 text-center min-h-[1em]"></div>
+            <input type="text" id="username" placeholder="Username" class="w-full bg-gray-700 p-3 rounded mb-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            <input type="password" id="password" placeholder="Password" class="w-full bg-gray-700 p-3 rounded mb-6 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            <button id="auth-submit-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded mb-4 transition-colors">Login</button>
+            <p class="text-center text-gray-400">
+                <span id="auth-switch-text">Don't have an account?</span>
+                <button id="auth-switch-btn" class="text-cyan-400 hover:underline">Register</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden">
+        <header class="bg-gray-800 p-4 shadow-lg flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-cyan-400">PrisonCTF</h1>
+            <div class="flex items-center space-x-4">
+                 <p id="user-info" class="text-lg"></p>
+                 <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded transition-colors">Logout</button>
             </div>
-        </footer>
-    </main>
-    
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+            <!-- Left Panel: Problem & Leaderboard -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg overflow-y-auto" style="height: calc(100vh - 100px);">
+                <h2 id="problem-title" class="text-xl font-semibold mb-4">Problem 1</h2>
+                <div id="problem-description" class="prose prose-invert max-w-none mb-8"></div>
+                <hr class="border-gray-600 my-6">
+                <h2 class="text-2xl font-bold mb-4 text-cyan-400">Leaderboard</h2>
+                <div id="leaderboard" class="space-y-2"></div>
+            </div>
+
+            <!-- Right Panel: Code Editor -->
+            <div class="lg:col-span-2">
+                 <div class="flex items-center justify-between mb-2">
+                    <select id="language-selector" class="bg-gray-700 p-2 border-0 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                         <option value="python">Python</option>
+                         <option value="c">C</option>
+                    </select>
+                    <button id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors disabled:bg-gray-500">Submit Solution</button>
+                </div>
+                <textarea id="code-editor"></textarea>
+                <div id="output-console" class="bg-black mt-2 p-4 rounded-lg font-mono text-sm" style="height: 120px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const BACKEND_BASE_URL = 'https://prisonctf-gha9e7h6ffctgnh7.centralus-01.azurewebsites.net'; 
+        const REPO_URL_BASE = 'https://raw.githubusercontent.com/shreyasd2006/prisonCTF/main'; // Changed to your fork
+        const TOTAL_PROBLEMS = 10; 
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            user: null, 
+            currentProblem: 1,
+            currentLanguage: 'python',
+            editor: null,
+            isSubmitting: false,
+            isLoginView: true,
+            solvedProblems: new Set(),
+        };
+
+        // --- DOM ELEMENT SELECTORS ---
+        const DOMElements = {
+            authModal: document.getElementById('auth-modal'),
+            mainContent: document.getElementById('main-content'),
+            authTitle: document.getElementById('auth-title'),
+            authError: document.getElementById('auth-error'),
+            usernameInput: document.getElementById('username'),
+            passwordInput: document.getElementById('password'),
+            authSubmitBtn: document.getElementById('auth-submit-btn'),
+            authSwitchText: document.getElementById('auth-switch-text'),
+            authSwitchBtn: document.getElementById('auth-switch-btn'),
+            userInfo: document.getElementById('user-info'),
+            logoutBtn: document.getElementById('logout-btn'),
+            problemTitle: document.getElementById('problem-title'),
+            problemDescription: document.getElementById('problem-description'),
+            leaderboard: document.getElementById('leaderboard'),
+            languageSelector: document.getElementById('language-selector'),
+            submitBtn: document.getElementById('submit-btn'),
+            outputConsole: document.getElementById('output-console'),
+            codeEditor: document.getElementById('code-editor'),
+        };
+        
+        // --- API HELPERS ---
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            const response = await fetch(`${BACKEND_BASE_URL}${endpoint}`, options);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'An API error occurred');
+            return data;
+        }
+
+        // --- CONSOLE LOGIC ---
+        function logToConsole(message, type = 'info') {
+            const colors = { info: 'text-gray-400', error: 'text-red-500', success: 'text-green-500', running: 'text-yellow-500' };
+            DOMElements.outputConsole.innerHTML = `<p class="${colors[type]}">> ${message}</p>`;
+        }
+        
+        // --- AUTHENTICATION LOGIC ---
+        function handleAuthSwitch() {
+            state.isLoginView = !state.isLoginView;
+            DOMElements.authTitle.textContent = state.isLoginView ? 'Login' : 'Register';
+            DOMElements.authSubmitBtn.textContent = state.isLoginView ? 'Login' : 'Register';
+            DOMElements.authSwitchText.textContent = state.isLoginView ? "Don't have an account?" : 'Already have an account?';
+            DOMElements.authSwitchBtn.textContent = state.isLoginView ? 'Register' : 'Login';
+            DOMElements.authError.textContent = '';
+        }
+
+        async function handleAuthSubmit() {
+            const username = DOMElements.usernameInput.value;
+            const password = DOMElements.passwordInput.value;
+            if (!username || !password) {
+                DOMElements.authError.textContent = 'Username and password are required.';
+                return;
+            }
+            const endpoint = state.isLoginView ? '/login' : '/register';
+            try {
+                const data = await apiRequest(endpoint, 'POST', { username, password });
+                if (state.isLoginView) {
+                    state.user = { id: data.userId, username };
+                    sessionStorage.setItem('ctf_user', JSON.stringify(state.user));
+                    await initializeUserSession();
+                } else {
+                    alert('Registration successful! Please login.');
+                    handleAuthSwitch();
+                }
+            } catch (error) {
+                DOMElements.authError.textContent = error.message;
+            }
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('ctf_user');
+            state.user = null;
+            DOMElements.mainContent.classList.add('hidden');
+            DOMElements.authModal.classList.remove('hidden');
+        }
+
+        // --- MAIN APP LOGIC ---
+        async function initializeUserSession() {
+            if (!state.user) return;
+            DOMElements.authModal.classList.add('hidden');
+            DOMElements.mainContent.classList.remove('hidden');
+            DOMElements.userInfo.textContent = `Welcome, ${state.user.username}`;
+            await fetchUserProgress();
+            await fetchLeaderboard();
+            loadNextProblem();
+        }
+        
+        async function fetchUserProgress() {
+            const data = await apiRequest(`/user_progress/${state.user.id}`);
+            state.solvedProblems = new Set(data.solved);
+        }
+
+        async function fetchLeaderboard() {
+            const data = await apiRequest('/leaderboard');
+            DOMElements.leaderboard.innerHTML = data.map((entry, index) => `
+                <div class="flex justify-between items-center p-2 rounded ${index === 0 ? 'bg-yellow-500 bg-opacity-80 text-black' : 'bg-gray-700'}">
+                    <span class="font-medium">${index + 1}. ${entry.username}</span>
+                    <span class="font-bold">${entry.score}</span>
+                </div>`).join('') || '<p class="text-gray-400">No submissions yet.</p>';
+        }
+
+        function loadNextProblem() {
+            for (let i = 1; i <= TOTAL_PROBLEMS; i++) {
+                if (!state.solvedProblems.has(i)) {
+                    loadProblem(i);
+                    return;
+                }
+            }
+            loadProblem(TOTAL_PROBLEMS + 1); // All problems solved
+        }
+        
+        async function fetchFile(filePath) {
+            const response = await fetch(`${REPO_URL_BASE}/${filePath}`);
+            if (!response.ok) throw new Error(`File not found: ${filePath}`);
+            return response.text();
+        }
+
+        async function loadProblem(problemNumber) {
+            state.currentProblem = problemNumber;
+            DOMElements.problemTitle.textContent = `Problem ${problemNumber}`;
+
+            if (problemNumber > TOTAL_PROBLEMS) {
+                DOMElements.problemDescription.innerHTML = '<h1>Congratulations! You have solved all problems.</h1>';
+                DOMElements.submitBtn.disabled = true;
+                return;
+            }
+
+            try {
+                const readmeContent = await fetchFile(`problems/problem ${problemNumber}/README.md`);
+                DOMElements.problemDescription.innerHTML = marked.parse(readmeContent);
+                await switchLanguage(state.currentLanguage, true);
+                logToConsole(`Problem ${problemNumber} loaded. Good luck!`);
+            } catch (error) {
+                logToConsole(error.message, 'error');
+            }
+        }
+
+        async function switchLanguage(lang, forceLoad = false) {
+            if (state.currentLanguage === lang && !forceLoad) return;
+            state.currentLanguage = lang;
+            const ext = { python: 'py', c: 'c' }[lang];
+            const code = await fetchFile(`problems/problem ${state.currentProblem}/solution.${ext}`);
+            state.editor.setValue(code);
+            state.editor.setOption('mode', { python: 'python', c: 'text/x-csrc' }[lang]);
+            DOMElements.languageSelector.value = lang;
+        }
+
+        async function handleSubmit() {
+            if (state.isSubmitting) return;
+            state.isSubmitting = true;
+            DOMElements.submitBtn.disabled = true;
+            DOMElements.submitBtn.textContent = 'Validating...';
+            logToConsole('Sending code to server...', 'running');
+
+            try {
+                const result = await apiRequest('/validate', 'POST', {
+                    userId: state.user.id,
+                    problem: state.currentProblem,
+                    language: state.currentLanguage,
+                    code: state.editor.getValue(),
+                });
+                
+                if (result.success) {
+                    logToConsole(`Correct! Problem ${state.currentProblem} solved!`, 'success');
+                    state.solvedProblems.add(state.currentProblem);
+                    await fetchLeaderboard();
+                    setTimeout(loadNextProblem, 2000);
+                } else {
+                    logToConsole(result.output || result.message, 'error');
+                }
+            } catch (error) {
+                logToConsole(error.message, 'error');
+            } finally {
+                state.isSubmitting = false;
+                DOMElements.submitBtn.disabled = false;
+                DOMElements.submitBtn.textContent = 'Submit Solution';
+            }
+        }
+
+        // --- APP INITIALIZATION ---
+        function initializeApp() {
+            state.editor = CodeMirror.fromTextArea(DOMElements.codeEditor, {
+                lineNumbers: true, theme: 'dracula', indentUnit: 4,
+            });
+            DOMElements.authSwitchBtn.addEventListener('click', handleAuthSwitch);
+            DOMElements.authSubmitBtn.addEventListener('click', handleAuthSubmit);
+            DOMElements.logoutBtn.addEventListener('click', logout);
+            DOMElements.languageSelector.addEventListener('change', (e) => switchLanguage(e.target.value));
+            DOMElements.submitBtn.addEventListener('click', handleSubmit);
+            
+            const savedUser = sessionStorage.getItem('ctf_user');
+            if (savedUser) {
+                state.user = JSON.parse(savedUser);
+                initializeUserSession();
+            }
+        }
+
+        initializeApp();
+    </script>
 </body>
 </html>
+
