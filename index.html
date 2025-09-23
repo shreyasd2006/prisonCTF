@@ -11,44 +11,88 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .CodeMirror { border-radius: 0.5rem; height: calc(100vh - 220px); font-size: 14px; }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .flip-card { perspective: 1000px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.is-flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+
+        .spinner {
+            display: inline-block;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
 
-    <!-- Auth Modal -->
+    <!-- Auth Modal with Flip Animation -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h2 id="auth-title" class="text-2xl font-bold mb-6 text-center text-cyan-400">Login</h2>
-            <div id="auth-error" class="text-red-400 mb-4 text-center min-h-[1em]"></div>
-            <input type="text" id="username" placeholder="Username" class="w-full bg-gray-700 p-3 rounded mb-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            <input type="password" id="password" placeholder="Password" class="w-full bg-gray-700 p-3 rounded mb-6 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            <button id="auth-submit-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded mb-4 transition-colors">Login</button>
-            <p class="text-center text-gray-400">
-                <span id="auth-switch-text">Don't have an account?</span>
-                <button id="auth-switch-btn" class="text-cyan-400 hover:underline">Register</button>
-            </p>
+        <div class="flip-card w-full max-w-md h-[420px]">
+            <div class="flip-card-inner">
+                <!-- Login Form -->
+                <div class="flip-card-front">
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full h-full flex flex-col justify-center fade-in">
+                        <h2 class="text-2xl font-bold mb-4 text-center text-cyan-400">Login</h2>
+                        <div id="login-error" class="text-red-400 mb-4 text-center min-h-[1em]"></div>
+                        <input type="text" id="login-username" placeholder="Username" class="w-full bg-gray-700 p-3 rounded mb-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-shadow">
+                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-gray-700 p-3 rounded mb-6 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-shadow">
+                        <button id="login-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded mb-4 transition-colors flex items-center justify-center h-[50px]">Login</button>
+                        <p class="text-center text-gray-400">
+                            Don't have an account?
+                            <button id="show-register-btn" class="text-cyan-400 hover:underline">Register</button>
+                        </p>
+                    </div>
+                </div>
+                <!-- Register Form -->
+                <div class="flip-card-back">
+                     <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full h-full flex flex-col justify-center fade-in">
+                        <h2 class="text-2xl font-bold mb-4 text-center text-teal-400">Register</h2>
+                        <div id="register-error" class="text-red-400 mb-4 text-center min-h-[1em]"></div>
+                        <div id="register-success" class="text-green-400 mb-4 text-center min-h-[1em]"></div>
+                        <input type="text" id="register-username" placeholder="Username" class="w-full bg-gray-700 p-3 rounded mb-4 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-shadow">
+                        <input type="password" id="register-password" placeholder="Password" class="w-full bg-gray-700 p-3 rounded mb-6 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-shadow">
+                        <button id="register-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded mb-4 transition-colors flex items-center justify-center h-[50px]">Create Account</button>
+                        <p class="text-center text-gray-400">
+                            Already have an account?
+                            <button id="show-login-btn" class="text-teal-400 hover:underline">Login</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div id="main-content" class="hidden">
-        <header class="bg-gray-800 p-4 shadow-lg flex justify-between items-center">
+        <header class="bg-gray-800 p-4 shadow-lg flex justify-between items-center sticky top-0 z-10">
             <h1 class="text-2xl font-bold text-cyan-400">PrisonCTF</h1>
             <div class="flex items-center space-x-4">
                  <p id="user-info" class="text-lg"></p>
-                 <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded transition-colors">Logout</button>
+                 <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg transition-colors">Logout</button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
             <!-- Left Panel: Problem & Leaderboard -->
-            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg overflow-y-auto" style="height: calc(100vh - 100px);">
-                <h2 id="problem-title" class="text-xl font-semibold mb-4">Problem 1</h2>
-                <div id="problem-description" class="prose prose-invert max-w-none mb-8"></div>
-                <hr class="border-gray-600 my-6">
+            <div class="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg overflow-y-auto" style="height: calc(100vh - 90px);">
+                <h2 id="problem-title" class="text-xl font-semibold mb-4 text-gray-200"></h2>
+                <div id="problem-description" class="prose prose-invert max-w-none mb-8 text-gray-300"></div>
+                <hr class="border-gray-700 my-6">
                 <h2 class="text-2xl font-bold mb-4 text-cyan-400">Leaderboard</h2>
                 <div id="leaderboard" class="space-y-2"></div>
             </div>
@@ -59,8 +103,9 @@
                     <select id="language-selector" class="bg-gray-700 p-2 border-0 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500">
                          <option value="python">Python</option>
                          <option value="c">C</option>
+                         <option value="java">Java</option>
                     </select>
-                    <button id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors disabled:bg-gray-500">Submit Solution</button>
+                    <button id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px] h-[40px]">Submit Solution</button>
                 </div>
                 <textarea id="code-editor"></textarea>
                 <div id="output-console" class="bg-black mt-2 p-4 rounded-lg font-mono text-sm" style="height: 120px; overflow-y: auto;"></div>
@@ -76,26 +121,26 @@
 
         // --- STATE MANAGEMENT ---
         const state = {
-            user: null, 
-            currentProblem: 1,
-            currentLanguage: 'python',
-            editor: null,
-            isSubmitting: false,
-            isLoginView: true,
-            solvedProblems: new Set(),
+            user: null, currentProblem: 1, currentLanguage: 'python', editor: null,
+            isSubmitting: false, solvedProblems: new Set(),
         };
 
         // --- DOM ELEMENT SELECTORS ---
         const DOMElements = {
             authModal: document.getElementById('auth-modal'),
             mainContent: document.getElementById('main-content'),
-            authTitle: document.getElementById('auth-title'),
-            authError: document.getElementById('auth-error'),
-            usernameInput: document.getElementById('username'),
-            passwordInput: document.getElementById('password'),
-            authSubmitBtn: document.getElementById('auth-submit-btn'),
-            authSwitchText: document.getElementById('auth-switch-text'),
-            authSwitchBtn: document.getElementById('auth-switch-btn'),
+            flipCard: document.querySelector('.flip-card'),
+            loginError: document.getElementById('login-error'),
+            registerError: document.getElementById('register-error'),
+            registerSuccess: document.getElementById('register-success'),
+            loginUsernameInput: document.getElementById('login-username'),
+            loginPasswordInput: document.getElementById('login-password'),
+            registerUsernameInput: document.getElementById('register-username'),
+            registerPasswordInput: document.getElementById('register-password'),
+            loginBtn: document.getElementById('login-btn'),
+            registerBtn: document.getElementById('register-btn'),
+            showRegisterBtn: document.getElementById('show-register-btn'),
+            showLoginBtn: document.getElementById('show-login-btn'),
             userInfo: document.getElementById('user-info'),
             logoutBtn: document.getElementById('logout-btn'),
             problemTitle: document.getElementById('problem-title'),
@@ -107,7 +152,10 @@
             codeEditor: document.getElementById('code-editor'),
         };
         
-        // --- API HELPERS ---
+        const fileExtensions = { python: 'py', c: 'c', java: 'java' };
+        const codeMirrorModes = { python: 'python', c: 'text/x-csrc', java: 'text/x-java' };
+        
+        // --- API & HELPERS ---
         async function apiRequest(endpoint, method = 'GET', body = null) {
             const options = { method, headers: { 'Content-Type': 'application/json' } };
             if (body) options.body = JSON.stringify(body);
@@ -117,42 +165,55 @@
             return data;
         }
 
-        // --- CONSOLE LOGIC ---
-        function logToConsole(message, type = 'info') {
-            const colors = { info: 'text-gray-400', error: 'text-red-500', success: 'text-green-500', running: 'text-yellow-500' };
-            DOMElements.outputConsole.innerHTML = `<p class="${colors[type]}">> ${message}</p>`;
-        }
-        
-        // --- AUTHENTICATION LOGIC ---
-        function handleAuthSwitch() {
-            state.isLoginView = !state.isLoginView;
-            DOMElements.authTitle.textContent = state.isLoginView ? 'Login' : 'Register';
-            DOMElements.authSubmitBtn.textContent = state.isLoginView ? 'Login' : 'Register';
-            DOMElements.authSwitchText.textContent = state.isLoginView ? "Don't have an account?" : 'Already have an account?';
-            DOMElements.authSwitchBtn.textContent = state.isLoginView ? 'Register' : 'Login';
-            DOMElements.authError.textContent = '';
+        function toggleSpinner(button, show, originalText) {
+            if (show) {
+                button.innerHTML = '<div class="spinner"></div>';
+                button.disabled = true;
+            } else {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
         }
 
-        async function handleAuthSubmit() {
-            const username = DOMElements.usernameInput.value;
-            const password = DOMElements.passwordInput.value;
-            if (!username || !password) {
-                DOMElements.authError.textContent = 'Username and password are required.';
-                return;
-            }
-            const endpoint = state.isLoginView ? '/login' : '/register';
+        function logToConsole(message, type = 'info') {
+            const colors = { info: 'text-gray-400', error: 'text-red-500', success: 'text-green-500', running: 'text-yellow-500' };
+            DOMElements.outputConsole.innerHTML = `<p class="${colors[type]}">> ${message.replace(/\n/g, '<br>')}</p>`;
+        }
+        
+        // --- AUTHENTICATION ---
+        async function handleLogin() {
+            toggleSpinner(DOMElements.loginBtn, true, 'Login');
+            DOMElements.loginError.textContent = '';
             try {
-                const data = await apiRequest(endpoint, 'POST', { username, password });
-                if (state.isLoginView) {
-                    state.user = { id: data.userId, username };
-                    sessionStorage.setItem('ctf_user', JSON.stringify(state.user));
-                    await initializeUserSession();
-                } else {
-                    alert('Registration successful! Please login.');
-                    handleAuthSwitch();
-                }
+                const data = await apiRequest('/login', 'POST', {
+                    username: DOMElements.loginUsernameInput.value,
+                    password: DOMElements.loginPasswordInput.value,
+                });
+                state.user = { id: data.userId, username: DOMElements.loginUsernameInput.value };
+                sessionStorage.setItem('ctf_user', JSON.stringify(state.user));
+                await initializeUserSession();
             } catch (error) {
-                DOMElements.authError.textContent = error.message;
+                DOMElements.loginError.textContent = error.message;
+            } finally {
+                toggleSpinner(DOMElements.loginBtn, false, 'Login');
+            }
+        }
+
+        async function handleRegister() {
+            toggleSpinner(DOMElements.registerBtn, true, 'Create Account');
+            DOMElements.registerError.textContent = '';
+            DOMElements.registerSuccess.textContent = '';
+            try {
+                await apiRequest('/register', 'POST', {
+                    username: DOMElements.registerUsernameInput.value,
+                    password: DOMElements.registerPasswordInput.value,
+                });
+                DOMElements.registerSuccess.textContent = 'Registration successful! Flipping to login...';
+                setTimeout(() => DOMElements.flipCard.classList.remove('is-flipped'), 2000);
+            } catch (error) {
+                DOMElements.registerError.textContent = error.message;
+            } finally {
+                toggleSpinner(DOMElements.registerBtn, false, 'Create Account');
             }
         }
         
@@ -181,21 +242,33 @@
 
         async function fetchLeaderboard() {
             const data = await apiRequest('/leaderboard');
-            DOMElements.leaderboard.innerHTML = data.map((entry, index) => `
-                <div class="flex justify-between items-center p-2 rounded ${index === 0 ? 'bg-yellow-500 bg-opacity-80 text-black' : 'bg-gray-700'}">
-                    <span class="font-medium">${index + 1}. ${entry.username}</span>
-                    <span class="font-bold">${entry.score}</span>
-                </div>`).join('') || '<p class="text-gray-400">No submissions yet.</p>';
+            let tableHTML = `
+                <table class="w-full text-left text-sm">
+                    <thead class="text-gray-400"><tr>
+                        <th class="p-2">Rank</th><th class="p-2">Username</th><th class="p-2">Score</th><th class="p-2">Time (s)</th>
+                    </tr></thead>
+                    <tbody>`;
+            data.forEach((entry, index) => {
+                const isFirst = index === 0;
+                tableHTML += `
+                    <tr class="${isFirst ? 'bg-yellow-500/80 text-black font-bold' : 'bg-gray-700/50'} rounded-lg">
+                        <td class="p-2 rounded-l-lg">${index + 1}</td>
+                        <td class="p-2">${entry.username}</td>
+                        <td class="p-2">${entry.score}</td>
+                        <td class="p-2 rounded-r-lg">${entry.time}</td>
+                    </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            DOMElements.leaderboard.innerHTML = data.length > 0 ? tableHTML : '<p class="text-gray-400">No submissions yet.</p>';
         }
 
         function loadNextProblem() {
             for (let i = 1; i <= TOTAL_PROBLEMS; i++) {
                 if (!state.solvedProblems.has(i)) {
-                    loadProblem(i);
-                    return;
+                    loadProblem(i); return;
                 }
             }
-            loadProblem(TOTAL_PROBLEMS + 1); // All problems solved
+            loadProblem(TOTAL_PROBLEMS + 1);
         }
         
         async function fetchFile(filePath) {
@@ -213,56 +286,46 @@
                 DOMElements.submitBtn.disabled = true;
                 return;
             }
-
             try {
                 const readmeContent = await fetchFile(`problems/problem ${problemNumber}/README.md`);
                 DOMElements.problemDescription.innerHTML = marked.parse(readmeContent);
                 await switchLanguage(state.currentLanguage, true);
                 logToConsole(`Problem ${problemNumber} loaded. Good luck!`);
-            } catch (error) {
-                logToConsole(error.message, 'error');
-            }
+            } catch (error) { logToConsole(error.message, 'error'); }
         }
 
         async function switchLanguage(lang, forceLoad = false) {
             if (state.currentLanguage === lang && !forceLoad) return;
             state.currentLanguage = lang;
-            const ext = { python: 'py', c: 'c' }[lang];
+            const ext = fileExtensions[lang];
             const code = await fetchFile(`problems/problem ${state.currentProblem}/solution.${ext}`);
             state.editor.setValue(code);
-            state.editor.setOption('mode', { python: 'python', c: 'text/x-csrc' }[lang]);
+            state.editor.setOption('mode', codeMirrorModes[lang]);
             DOMElements.languageSelector.value = lang;
         }
 
         async function handleSubmit() {
-            if (state.isSubmitting) return;
-            state.isSubmitting = true;
-            DOMElements.submitBtn.disabled = true;
-            DOMElements.submitBtn.textContent = 'Validating...';
-            logToConsole('Sending code to server...', 'running');
+            toggleSpinner(DOMElements.submitBtn, true, 'Submit Solution');
+            logToConsole('Sending code for validation...', 'running');
 
             try {
                 const result = await apiRequest('/validate', 'POST', {
-                    userId: state.user.id,
-                    problem: state.currentProblem,
-                    language: state.currentLanguage,
-                    code: state.editor.getValue(),
+                    userId: state.user.id, problem: state.currentProblem,
+                    language: state.currentLanguage, code: state.editor.getValue(),
                 });
                 
                 if (result.success) {
-                    logToConsole(`Correct! Problem ${state.currentProblem} solved!`, 'success');
+                    logToConsole(`Correct! ${result.message}`, 'success');
                     state.solvedProblems.add(state.currentProblem);
                     await fetchLeaderboard();
                     setTimeout(loadNextProblem, 2000);
                 } else {
-                    logToConsole(result.output || result.message, 'error');
+                    logToConsole(`${result.message}<br><br>Output:<br>${result.output || 'No output.'}`, 'error');
                 }
             } catch (error) {
                 logToConsole(error.message, 'error');
             } finally {
-                state.isSubmitting = false;
-                DOMElements.submitBtn.disabled = false;
-                DOMElements.submitBtn.textContent = 'Submit Solution';
+                toggleSpinner(DOMElements.submitBtn, false, 'Submit Solution');
             }
         }
 
@@ -271,8 +334,11 @@
             state.editor = CodeMirror.fromTextArea(DOMElements.codeEditor, {
                 lineNumbers: true, theme: 'dracula', indentUnit: 4,
             });
-            DOMElements.authSwitchBtn.addEventListener('click', handleAuthSwitch);
-            DOMElements.authSubmitBtn.addEventListener('click', handleAuthSubmit);
+            // Event Listeners
+            DOMElements.showRegisterBtn.addEventListener('click', () => DOMElements.flipCard.classList.add('is-flipped'));
+            DOMElements.showLoginBtn.addEventListener('click', () => DOMElements.flipCard.classList.remove('is-flipped'));
+            DOMElements.loginBtn.addEventListener('click', handleLogin);
+            DOMElements.registerBtn.addEventListener('click', handleRegister);
             DOMElements.logoutBtn.addEventListener('click', logout);
             DOMElements.languageSelector.addEventListener('change', (e) => switchLanguage(e.target.value));
             DOMElements.submitBtn.addEventListener('click', handleSubmit);
@@ -288,4 +354,3 @@
     </script>
 </body>
 </html>
-
