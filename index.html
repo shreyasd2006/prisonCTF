@@ -103,7 +103,6 @@
                     <select id="language-selector" class="bg-gray-700 p-2 border-0 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500">
                          <option value="python">Python</option>
                          <option value="c">C</option>
-                         <option value="java">Java</option>
                     </select>
                     <button id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px] h-[40px]">Submit Solution</button>
                 </div>
@@ -152,8 +151,8 @@
             codeEditor: document.getElementById('code-editor'),
         };
         
-        const fileExtensions = { python: 'py', c: 'c', java: 'java' };
-        const codeMirrorModes = { python: 'python', c: 'text/x-csrc', java: 'text/x-java' };
+        const fileExtensions = { python: 'py', c: 'c' };
+        const codeMirrorModes = { python: 'python', c: 'text/x-csrc' };
         
         // --- API & HELPERS ---
         async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -354,4 +353,3 @@
     </script>
 </body>
 </html>
-
